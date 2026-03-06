@@ -1,4 +1,4 @@
-# SEC EDGAR Explorer
+# SEC EDGAR Explorer (Next.js version)
 
 Interactive 10-K company relationship graph and topic cluster explorer.  
 Built with **Next.js 14** (App Router, static export) + **TypeScript** + React SVG.
