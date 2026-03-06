@@ -189,6 +189,274 @@ const HIERARCHY: RootNode = {
   ]
 }
 
+// ── Sentiment Data ────────────────────────────────────────────────────────────
+type WeightCriteria = 'adjPrice' | 'marketCap' | 'txVolume'
+
+interface SentimentRow {
+  id: string
+  name: string
+  sector?: string
+  scores: Record<WeightCriteria, { prev: number; curr: number; rolling: number }>
+}
+
+const CRITERIA: { key: WeightCriteria; label: string }[] = [
+  { key: 'adjPrice',  label: 'Adjusted Price wt. Sentiment Score' },
+  { key: 'marketCap', label: 'Market Capitalization wt. Sentiment Score' },
+  { key: 'txVolume',  label: 'Transaction Volume wt. Sentiment Score' },
+]
+
+const SECTOR_SENTIMENT: SentimentRow[] = [
+  { id:'tech',    name:'Technology',                scores:{ adjPrice:{prev:8.1,curr:13.4,rolling:11.2}, marketCap:{prev:7.9,curr:13.8,rolling:11.5}, txVolume:{prev:9.2,curr:13.1,rolling:11.0} } },
+  { id:'fin',     name:'Financials',                scores:{ adjPrice:{prev:5.8,curr:12.9,rolling:9.4},  marketCap:{prev:5.2,curr:13.2,rolling:9.1},  txVolume:{prev:6.1,curr:11.8,rolling:9.8} } },
+  { id:'semi',    name:'Semiconductors',            scores:{ adjPrice:{prev:7.3,curr:11.8,rolling:10.1}, marketCap:{prev:7.8,curr:12.4,rolling:10.5}, txVolume:{prev:8.1,curr:12.0,rolling:10.3} } },
+  { id:'health',  name:'Medical & Healthcare',      scores:{ adjPrice:{prev:6.2,curr:9.4,rolling:8.1},   marketCap:{prev:5.9,curr:9.8,rolling:8.3},   txVolume:{prev:6.8,curr:9.1,rolling:8.0} } },
+  { id:'auto',    name:'Automotive',                scores:{ adjPrice:{prev:7.1,curr:10.2,rolling:8.9},  marketCap:{prev:6.8,curr:10.5,rolling:9.0},  txVolume:{prev:7.4,curr:9.8,rolling:8.7} } },
+  { id:'retail',  name:'Retail',                    scores:{ adjPrice:{prev:5.4,curr:8.7,rolling:7.2},   marketCap:{prev:5.1,curr:8.4,rolling:7.0},   txVolume:{prev:5.8,curr:8.9,rolling:7.5} } },
+  { id:'energy',  name:'Energy',                    scores:{ adjPrice:{prev:8.9,curr:7.2,rolling:8.1},   marketCap:{prev:9.1,curr:7.0,rolling:8.3},   txVolume:{prev:8.7,curr:7.5,rolling:8.0} } },
+  { id:'software',name:'Software',                  scores:{ adjPrice:{prev:6.8,curr:12.1,rolling:9.8},  marketCap:{prev:6.5,curr:12.4,rolling:9.5},  txVolume:{prev:7.2,curr:11.8,rolling:9.6} } },
+  { id:'pharma',  name:'Pharmaceutical',            scores:{ adjPrice:{prev:5.1,curr:7.8,rolling:6.9},   marketCap:{prev:4.9,curr:7.5,rolling:6.7},   txVolume:{prev:5.4,curr:8.1,rolling:7.1} } },
+  { id:'telecom', name:'Telecommunications',        scores:{ adjPrice:{prev:6.1,curr:9.1,rolling:7.8},   marketCap:{prev:5.8,curr:9.4,rolling:7.5},   txVolume:{prev:6.4,curr:8.8,rolling:7.6} } },
+  { id:'ind',     name:'Industrials',               scores:{ adjPrice:{prev:7.4,curr:11.2,rolling:9.3},  marketCap:{prev:7.2,curr:11.5,rolling:9.1},  txVolume:{prev:7.8,curr:10.9,rolling:9.4} } },
+  { id:'conscy',  name:'Consumer Cyclical',         scores:{ adjPrice:{prev:5.9,curr:9.8,rolling:8.0},   marketCap:{prev:5.7,curr:9.5,rolling:7.8},   txVolume:{prev:6.2,curr:10.1,rolling:8.2} } },
+]
+
+const COMPANY_SENTIMENT: SentimentRow[] = [
+  { id:'NVDA', name:'NVIDIA Corp.',           sector:'Technology',  scores:{ adjPrice:{prev:9.2,curr:14.1,rolling:12.0}, marketCap:{prev:9.5,curr:14.4,rolling:12.3}, txVolume:{prev:10.1,curr:13.8,rolling:12.1} } },
+  { id:'MSFT', name:'Microsoft Corp.',        sector:'Technology',  scores:{ adjPrice:{prev:8.4,curr:13.2,rolling:11.1}, marketCap:{prev:8.1,curr:13.5,rolling:11.4}, txVolume:{prev:8.9,curr:12.9,rolling:11.0} } },
+  { id:'AAPL', name:'Apple Inc.',             sector:'Technology',  scores:{ adjPrice:{prev:7.8,curr:12.4,rolling:10.5}, marketCap:{prev:8.0,curr:12.8,rolling:10.8}, txVolume:{prev:8.3,curr:12.1,rolling:10.4} } },
+  { id:'GOOGL',name:'Alphabet Inc.',          sector:'Technology',  scores:{ adjPrice:{prev:7.1,curr:11.8,rolling:10.0}, marketCap:{prev:7.4,curr:12.1,rolling:10.2}, txVolume:{prev:7.8,curr:11.5,rolling:9.9} } },
+  { id:'META', name:'Meta Platforms',         sector:'Technology',  scores:{ adjPrice:{prev:6.9,curr:11.2,rolling:9.4},  marketCap:{prev:6.6,curr:11.5,rolling:9.1},  txVolume:{prev:7.2,curr:10.9,rolling:9.2} } },
+  { id:'AMZN', name:'Amazon.com Inc.',        sector:'Consumer',    scores:{ adjPrice:{prev:6.2,curr:10.8,rolling:8.9},  marketCap:{prev:6.0,curr:11.1,rolling:8.7},  txVolume:{prev:6.5,curr:10.5,rolling:8.8} } },
+  { id:'TSLA', name:'Tesla Inc.',             sector:'Automotive',  scores:{ adjPrice:{prev:8.1,curr:9.4,rolling:8.8},   marketCap:{prev:7.9,curr:9.7,rolling:8.6},   txVolume:{prev:8.4,curr:9.1,rolling:8.7} } },
+  { id:'AMD',  name:'Advanced Micro Devices', sector:'Technology',  scores:{ adjPrice:{prev:7.4,curr:12.8,rolling:10.4}, marketCap:{prev:7.2,curr:13.1,rolling:10.6}, txVolume:{prev:7.8,curr:12.5,rolling:10.3} } },
+  { id:'JPM',  name:'JPMorgan Chase',         sector:'Financial',   scores:{ adjPrice:{prev:5.9,curr:11.4,rolling:8.8},  marketCap:{prev:5.6,curr:11.7,rolling:8.5},  txVolume:{prev:6.2,curr:11.1,rolling:8.9} } },
+  { id:'GS',   name:'Goldman Sachs',          sector:'Financial',   scores:{ adjPrice:{prev:5.4,curr:10.8,rolling:8.2},  marketCap:{prev:5.1,curr:11.1,rolling:7.9},  txVolume:{prev:5.8,curr:10.5,rolling:8.3} } },
+  { id:'BAC',  name:'Bank of America',        sector:'Financial',   scores:{ adjPrice:{prev:4.9,curr:10.1,rolling:7.5},  marketCap:{prev:4.7,curr:10.4,rolling:7.2},  txVolume:{prev:5.2,curr:9.8,rolling:7.6} } },
+  { id:'INTC', name:'Intel Corp.',            sector:'Technology',  scores:{ adjPrice:{prev:6.1,curr:8.4,rolling:7.4},   marketCap:{prev:5.9,curr:8.7,rolling:7.1},   txVolume:{prev:6.4,curr:8.1,rolling:7.5} } },
+  { id:'F',    name:'Ford Motor Co.',         sector:'Automotive',  scores:{ adjPrice:{prev:6.4,curr:8.9,rolling:7.8},   marketCap:{prev:6.2,curr:9.2,rolling:7.5},   txVolume:{prev:6.7,curr:8.6,rolling:7.9} } },
+  { id:'WMT',  name:'Walmart Inc.',           sector:'Consumer',    scores:{ adjPrice:{prev:5.2,curr:8.1,rolling:6.9},   marketCap:{prev:5.0,curr:8.4,rolling:6.7},   txVolume:{prev:5.5,curr:7.8,rolling:7.0} } },
+  { id:'BRK',  name:'Berkshire Hathaway',     sector:'Financial',   scores:{ adjPrice:{prev:6.8,curr:10.2,rolling:8.5},  marketCap:{prev:6.5,curr:10.5,rolling:8.2},  txVolume:{prev:7.1,curr:9.9,rolling:8.6} } },
+]
+
+// ── Sentiment View ────────────────────────────────────────────────────────────
+function DotPlot({ rows, domainMin, domainMax }: { rows: SentimentRow[]; domainMin: number; domainMax: number }) {
+  const [hovered, setHovered] = useState<string | null>(null)
+  const rowH = 28, padL = 200, padR = 40, trackW = 380
+
+  const toX = (v: number) => padL + ((v - domainMin) / (domainMax - domainMin)) * trackW
+
+  const ticks = [2, 4, 6, 8, 10, 12, 14].filter(t => t >= domainMin && t <= domainMax)
+  const svgH = rows.length * rowH + 32
+
+  return (
+    <svg width={padL + trackW + padR} height={svgH} style={{ display:'block', overflow:'visible' }}>
+      {/* grid lines + tick labels */}
+      {ticks.map(t => (
+        <g key={t}>
+          <line x1={toX(t)} y1={16} x2={toX(t)} y2={svgH - 4}
+            stroke="#f3f4f6" strokeWidth={1}/>
+          <text x={toX(t)} y={12} textAnchor="middle"
+            fontSize={10} fill="#9ca3af" fontFamily="Inter,system-ui">{t}</text>
+        </g>
+      ))}
+
+      {rows.map((row, i) => {
+        const y = 16 + i * rowH + rowH / 2
+        const isHov = hovered === row.id
+        const { prev, curr, rolling } = row.scores[CRITERIA[0].key] // placeholder, overridden per criteria
+        const xPrev = toX(prev), xCurr = toX(curr), xRoll = toX(rolling)
+        const minX = Math.min(xPrev, xCurr, xRoll), maxX = Math.max(xPrev, xCurr, xRoll)
+
+        return (
+          <g key={row.id}
+            onMouseEnter={() => setHovered(row.id)}
+            onMouseLeave={() => setHovered(null)}>
+            {/* hover bg */}
+            {isHov && <rect x={0} y={y - rowH/2} width={padL + trackW + padR} height={rowH}
+              fill="#f9fafb" rx={4}/>}
+            {/* row label */}
+            <text x={padL - 10} y={y + 4} textAnchor="end"
+              fontSize={11.5} fontFamily="Inter,system-ui" fontWeight={isHov ? 600 : 400}
+              fill={isHov ? '#111827' : '#374151'}>
+              {row.name}
+            </text>
+            {/* track line */}
+            <line x1={minX} y1={y} x2={maxX} y2={y} stroke="#e5e7eb" strokeWidth={1.5}/>
+            {/* prev week dot */}
+            <circle cx={xPrev} cy={y} r={5} fill="#93c5fd" stroke="#fff" strokeWidth={1.5}/>
+            {/* rolling dot */}
+            <circle cx={xRoll} cy={y} r={5} fill="#fbbf24" stroke="#fff" strokeWidth={1.5}/>
+            {/* this week dot */}
+            <circle cx={xCurr} cy={y} r={6} fill="#1e3a5f" stroke="#fff" strokeWidth={1.5}/>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+function SentimentView() {
+  const [groupBy, setGroupBy] = useState<'sector' | 'company'>('sector')
+  const [activeCriteria, setActiveCriteria] = useState<WeightCriteria>('adjPrice')
+  const [hovered, setHovered] = useState<{ id: string; x: number; y: number } | null>(null)
+
+  const data = groupBy === 'sector' ? SECTOR_SENTIMENT : COMPANY_SENTIMENT
+  const domainMin = 2, domainMax = 15
+  const padL = 200, padR = 40, trackW = 380
+  const rowH = 32, headerH = 48
+
+  const toX = (v: number) => padL + ((v - domainMin) / (domainMax - domainMin)) * trackW
+  const ticks = [2, 4, 6, 8, 10, 12, 14]
+
+  const totalH = CRITERIA.length * (headerH + data.length * rowH) + 32
+
+  return (
+    <div style={{ display:'flex', flex:1, overflow:'hidden', background:'#fff' }}>
+      {/* dot grid bg */}
+      <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }}>
+        <defs>
+          <pattern id="dg3" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+            <circle cx=".75" cy=".75" r=".75" fill="#e5e7eb"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#dg3)"/>
+      </svg>
+
+      <div style={{ flex:1, overflowY:'auto', padding:'28px 40px', position:'relative', zIndex:1 }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28 }}>
+          <div>
+            <h2 style={{ fontSize:20, fontWeight:700, color:'#111827', letterSpacing:'-.03em', marginBottom:4 }}>
+              Weighted Sentiment Scores
+            </h2>
+            <p style={{ fontSize:12.5, color:'#6b7280' }}>
+              Comparison of sentiment scores weighted by each criterion · Current week vs previous
+            </p>
+          </div>
+          {/* Group toggle */}
+          <div style={{ display:'flex', background:'#f3f4f6', borderRadius:8, padding:3, gap:2 }}>
+            {(['sector','company'] as const).map(g => (
+              <button key={g} onClick={() => setGroupBy(g)} style={{
+                padding:'6px 18px', borderRadius:6, border:'none', cursor:'pointer',
+                fontFamily:'Inter,system-ui', fontSize:12, fontWeight:500, transition:'all .15s',
+                background: groupBy === g ? '#fff' : 'transparent',
+                color: groupBy === g ? '#111827' : '#9ca3af',
+                boxShadow: groupBy === g ? '0 1px 3px rgba(0,0,0,.08)' : 'none',
+                textTransform:'capitalize',
+              }}>{g}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div style={{ display:'flex', gap:20, marginBottom:28, alignItems:'center' }}>
+          {[
+            { color:'#93c5fd', label:'Prev week', r:5 },
+            { color:'#1e3a5f', label:'This week', r:6 },
+            { color:'#fbbf24', label:'Rolling',   r:5 },
+          ].map(({ color, label, r }) => (
+            <div key={label} style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <svg width={r*2+2} height={r*2+2}>
+                <circle cx={r+1} cy={r+1} r={r} fill={color}/>
+              </svg>
+              <span style={{ fontSize:12, color:'#6b7280', fontWeight:500 }}>{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* One block per criterion */}
+        {CRITERIA.map(({ key, label }) => {
+          const svgH = headerH + data.length * rowH
+
+          return (
+            <div key={key} style={{ marginBottom:36, background:'rgba(255,255,255,0.85)',
+              backdropFilter:'blur(4px)', borderRadius:12, border:'1px solid #f3f4f6',
+              padding:'20px 24px', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#111827', marginBottom:16,
+                letterSpacing:'-.01em' }}>{label}</div>
+
+              <svg width={padL + trackW + padR} height={svgH} style={{ display:'block', overflow:'visible' }}>
+                {/* tick labels */}
+                {ticks.map(t => (
+                  <g key={t}>
+                    <line x1={toX(t)} y1={20} x2={toX(t)} y2={svgH}
+                      stroke="#f3f4f6" strokeWidth={1}/>
+                    <text x={toX(t)} y={14} textAnchor="middle"
+                      fontSize={10} fill="#9ca3af" fontFamily="Inter,system-ui">{t}</text>
+                  </g>
+                ))}
+
+                {data.map((row, i) => {
+                  const y = headerH/2 + i * rowH + rowH / 2 - 4
+                  const { prev, curr, rolling } = row.scores[key]
+                  const xPrev = toX(prev), xCurr = toX(curr), xRoll = toX(rolling)
+                  const minX = Math.min(xPrev, xCurr, xRoll)
+                  const maxX = Math.max(xPrev, xCurr, xRoll)
+                  const isHov = hovered?.id === `${key}-${row.id}`
+
+                  return (
+                    <g key={row.id}
+                      onMouseEnter={e => {
+                        const rect = (e.currentTarget as SVGGElement).closest('svg')!.getBoundingClientRect()
+                        setHovered({ id:`${key}-${row.id}`, x: e.clientX - rect.left, y })
+                      }}
+                      onMouseLeave={() => setHovered(null)}>
+                      {isHov && <rect x={0} y={y - rowH/2 + 4} width={padL + trackW + padR}
+                        height={rowH} fill="#f9fafb" rx={4}/>}
+                      {/* label */}
+                      <text x={padL - 12} y={y + 4} textAnchor="end"
+                        fontSize={11.5} fontFamily="Inter,system-ui"
+                        fontWeight={isHov ? 600 : 400}
+                        fill={isHov ? '#111827' : '#374151'}>
+                        {row.name}
+                      </text>
+                      {/* sector dot for company view */}
+                      {groupBy === 'company' && row.sector && (
+                        <circle cx={padL - 6} cy={y} r={3.5}
+                          fill={SECTOR_COLORS[row.sector] ?? '#9ca3af'}/>
+                      )}
+                      {/* track */}
+                      <line x1={minX} y1={y} x2={maxX} y2={y}
+                        stroke="#e5e7eb" strokeWidth={1.5}/>
+                      {/* prev week */}
+                      <circle cx={xPrev} cy={y} r={5} fill="#93c5fd" stroke="#fff" strokeWidth={1.5}/>
+                      {/* rolling */}
+                      <circle cx={xRoll} cy={y} r={5} fill="#fbbf24" stroke="#fff" strokeWidth={1.5}/>
+                      {/* this week */}
+                      <circle cx={xCurr} cy={y} r={6.5} fill="#1e3a5f" stroke="#fff" strokeWidth={2}/>
+
+                      {/* tooltip */}
+                      {isHov && (
+                        <g transform={`translate(${Math.min(xCurr + 12, trackW + padL - 130)}, ${y - 44})`}>
+                          <rect width={130} height={52} rx={6} fill="#111827"/>
+                          <text x={10} y={16} fontSize={11} fontWeight={700} fill="#fff" fontFamily="Inter,system-ui">
+                            {row.name.split(' ')[0]}
+                          </text>
+                          <text x={10} y={30} fontSize={10} fill="#9ca3af" fontFamily="Inter,system-ui">
+                            Prev: {prev.toFixed(1)} · Roll: {rolling.toFixed(1)}
+                          </text>
+                          <text x={10} y={44} fontSize={10} fill="#93c5fd" fontFamily="Inter,system-ui">
+                            This week: {curr.toFixed(1)}
+                          </text>
+                        </g>
+                      )}
+                    </g>
+                  )
+                })}
+              </svg>
+            </div>
+          )
+        })}
+
+        {/* Footer note */}
+        <p style={{ fontSize:11, color:'#9ca3af', fontStyle:'italic', marginTop:8 }}>
+          Duration: Current and Previous Weeks · Universe: S&P 500 companies
+        </p>
+      </div>
+    </div>
+  )
+}
+
 // ── Circle packing layout ─────────────────────────────────────────────────────
 function packCircles(node: HierarchyInput, cx: number, cy: number, r: number, depth = 0): PackedNode[] {
   const out: PackedNode[] = [{ ...node, cx, cy, r, depth }]
@@ -818,7 +1086,7 @@ export default function Explorer() {
           <span style={{ background:'#f3f4f6', borderRadius:6, padding:'3px 10px',
             color:'#374151', fontSize:11, fontWeight:600, letterSpacing:'.02em' }}>2023 Filings</span>
           <div style={{ display:'flex', background:'#f3f4f6', borderRadius:8, padding:3, gap:2, marginLeft:8 }}>
-            {[['graph','Graph'],['topics','Topics']].map(([key, lbl]) => (
+            {[['graph','Graph'],['topics','Topics'],['sentiment','Sentiment']].map(([key, lbl]) => (
               <button key={key} onClick={() => setActiveTab(key)} style={{
                 padding:'5px 16px', borderRadius:6, border:'none', cursor:'pointer',
                 fontFamily:'Inter,system-ui', fontSize:12, fontWeight:500, transition:'all .15s',
@@ -831,7 +1099,9 @@ export default function Explorer() {
         </div>
       </nav>
 
-      {activeTab === 'topics'
+      {activeTab === 'sentiment'
+        ? <SentimentView />
+        : activeTab === 'topics'
         ? <TopicView crossSel={crossSel} setCrossSel={setCrossSel} setActiveTab={setActiveTab}/>
         : (
         <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
