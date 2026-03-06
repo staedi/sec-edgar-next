@@ -6,7 +6,7 @@ Built with **Next.js 14** (App Router, static export) + **TypeScript** + React S
 ## Project structure
 
 ```
-sec-edgar-explorer/
+sec-edgar-next/
 ├── app/
 │   ├── layout.tsx          # Root layout (metadata, html/body)
 │   └── page.tsx            # Home route → renders Explorer
@@ -32,13 +32,13 @@ bun run type-check  # TypeScript check without building
 git init
 git add .
 git commit -m "initial commit"
-git remote add origin https://github.com/<you>/sec-edgar-explorer.git
+git remote add origin https://github.com/<you>/sec-edgar-next.git
 git push -u origin main
 ```
 
 Then: **GitHub repo → Settings → Pages → Source → GitHub Actions**
 
-Live at: `https://<you>.github.io/sec-edgar-explorer/`
+Live at: `https://<you>.github.io/sec-edgar-next/`
 
 > If you rename the repo, update `basePath` and `assetPrefix` in `next.config.js`.
 
